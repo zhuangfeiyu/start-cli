@@ -1,0 +1,157 @@
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import Layout from '@/layout/index.vue'
+import { useAuthStore } from '@/stores/auth-store'
+import { ElMessage } from 'element-plus'
+<% if (needInternational) { -%>
+import { t } from '@/lang';
+import i18n from '@/lang';
+<% } -%>
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    title?: string
+    requiresAuth?: boolean
+    role?: string | string[]
+    permission?: string | string[]
+    icon?: string
+    keepAlive?: boolean
+  }
+}
+
+<% if (type === 'admin') { -%>
+const routes: RouteRecordRaw[] = [
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/login/index.vue'),
+    meta: {
+<% if (needInternational) { -%>
+      title: 'routes.login',
+<% } else { -%>
+      title: '登录',
+<% } -%>
+      requiresAuth: false,
+    },
+  },
+  {
+    path: '/',
+    component: Layout,
+    redirect: '/test-info',
+    children: [
+      {
+        path: 'test-info',
+        name: 'TestInfoIndex',
+        component: () => import('@/views/test-info/index.vue'),
+        meta: {
+<% if (needInternational) { -%>
+          title: 'routes.testInfo',
+<% } else { -%>
+          title: '测试信息',
+<% } -%>
+          icon: 'List',
+          keepAlive: true,
+          requiresAuth: true,
+        },
+      },
+    ],
+  },
+]
+<% } -%>
+<% if (type === 'screen') { -%>
+const routes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    name: 'ScreenIndex',
+    component: () => import('@/views/screen/index.vue'),
+    meta: {
+<% if (needInternational) { -%>
+      title: 'routes.dataScreen',
+<% } else { -%>
+      title: '数据大屏',
+<% } -%>
+    },
+  },
+]
+<% } -%>
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes,
+})
+
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+  const isLoggedIn = authStore.isLoggedIn
+
+  if (to.meta.title) {
+<% if (needInternational) { -%>
+    const title = typeof to.meta.title === 'string' && to.meta.title.startsWith('routes.') ? t(to.meta.title) : to.meta.title
+    document.title = `${title} - ${t('common.systemTitle')}`
+<% } else { -%>
+    document.title = `${to.meta.title} - 系统标题`
+<% } -%>
+  }
+
+  const requiresAuth = to.meta.requiresAuth !== false
+
+  if (requiresAuth && !isLoggedIn) {
+<% if (needInternational) { -%>
+    ElMessage.warning(t('common.pleaseLogin'))
+<% } else { -%>
+    ElMessage.warning('请先登录')
+<% } -%>
+    next({
+      path: '/login',
+      query: { redirect: to.fullPath },
+    })
+    return
+  }
+
+  if (to.path === '/login' && isLoggedIn) {
+    next({ path: '/' })
+    return
+  }
+
+<% if (needPermission) { -%>
+  const requiredRole = to.meta.role
+  if (requiredRole && !authStore.hasRole(requiredRole)) {
+<% if (needInternational) { -%>
+    ElMessage.error(t('common.noPermission'))
+<% } else { -%>
+    ElMessage.error('您没有权限访问此页面')
+<% } -%>
+    next({ path: '/' })
+    return
+  }
+
+  const requiredPermission = to.meta.permission
+  if (requiredPermission && !authStore.hasPermission(requiredPermission)) {
+<% if (needInternational) { -%>
+    ElMessage.error(t('common.noPermission'))
+<% } else { -%>
+    ElMessage.error('您没有权限访问此页面')
+<% } -%>
+    next({ path: '/' })
+    return
+  }
+<% } -%>
+
+  next()
+})
+
+<% if (needInternational) { -%>
+// 监听语言变化，更新标题
+watch(
+  () => i18n.global.locale.value,
+  () => {
+    console.log('+++++watch  route ', i18n.global.locale.value);
+    const route = router.currentRoute.value;
+    if (route.meta.title) {
+      const title = t(route.meta.title);
+      document.title = `${title} - ${t('common.systemTitle')}`;
+    }
+  }
+);
+<% } -%>
+
+export default router

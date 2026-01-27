@@ -1,0 +1,22 @@
+<script setup>
+import { elementPlusLocale } from '@/lang'
+import { useAuthStore } from '@/stores/auth-store'
+
+defineOptions({
+  name: 'App',
+})
+
+const authStore = useAuthStore()
+
+// token暂时写死
+authStore.setToken('dbc305410e074e6aa0a2cf02f46fda44')
+</script>
+
+<template>
+  <el-config-provider :locale="elementPlusLocale">
+    <router-view />
+  </el-config-provider>
+</template>
+
+<style scoped lang="scss"></style>
+

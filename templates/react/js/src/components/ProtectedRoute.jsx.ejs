@@ -1,0 +1,62 @@
+import { Navigate, useLocation, useMatches } from 'react-router-dom'
+<% if (needInternational) { -%>
+import { useTranslation } from 'react-i18next'
+<% } -%>
+
+import {
+  selectHasPermission,
+  selectHasRole,
+  selectIsLoggedIn,
+} from '@/stores/auth-store'
+import { useAppSelector } from '@/stores/hooks'
+
+function ProtectedRoute({
+  children,
+  requiredRole,
+  requiredPermission,
+  requireAuth = true,
+}) {
+<% if (needInternational) { -%>
+  const { t } = useTranslation()
+<% } -%>
+  const isLoggedIn = useAppSelector(selectIsLoggedIn)
+  const location = useLocation()
+  const matches = useMatches()
+
+  const match = matches[matches.length - 1]
+<% if (needPermission) { -%>
+  const role = requiredRole ?? match?.handle?.role
+  const permission = requiredPermission ?? match?.handle?.permission
+
+  const hasRole = useAppSelector(selectHasRole(role))
+  const hasPermission = useAppSelector(selectHasPermission(permission))
+<% } -%>
+
+  if (requireAuth && !isLoggedIn) {
+    return <Navigate to="/login" state={{ from: location }} replace />
+  }
+
+<% if (needPermission) { -%>
+  if (role && !hasRole) {
+    return (
+      <div style={{ padding: '50px', textAlign: 'center' }}>
+        <h2><% if (needInternational) { -%>{t('common.noPermission')}<% } else { -%>无权限访问<% } -%></h2>
+        <p>您的角色无权访问此页面</p>
+      </div>
+    )
+  }
+
+  if (permission && !hasPermission) {
+    return (
+      <div style={{ padding: '50px', textAlign: 'center' }}>
+        <h2><% if (needInternational) { -%>{t('common.noPermission')}<% } else { -%>无权限访问<% } -%></h2>
+        <p>您没有访问此页面的权限</p>
+      </div>
+    )
+  }
+<% } -%>
+
+  return <>{children}</>
+}
+
+export default ProtectedRoute

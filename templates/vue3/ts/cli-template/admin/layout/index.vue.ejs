@@ -1,0 +1,51 @@
+<template>
+  <el-container class="h-screen layout">
+    <!-- 顶部导航栏 -->
+    <el-header class="border-b layout__header">
+      <Header />
+    </el-header>
+
+    <el-container class="h-[calc(100vh-60px)]">
+      <!-- 左侧菜单栏 -->
+      <el-aside width="240px" class="overflow-hidden">
+        <Menu />
+      </el-aside>
+
+      <!-- 主内容区域 -->
+      <el-main class="layout__main !p-4">
+        <div class="layout__main__content w-full h-full rounded-lg p-4">
+          <router-view class="h-full overflow-y-auto"/>
+        </div>
+      </el-main>
+    </el-container>
+  </el-container>
+</template>
+
+<script setup lang="ts">
+import Header from './header/index.vue'
+import Menu from './menu/index.vue'
+
+defineOptions({
+  name: 'LayoutContainer'
+})
+
+</script>
+
+<style scoped lang="scss">
+.layout {
+  background-color: var(--layout-bg);
+
+  &__header {
+    background-color: var(--layout-main-bg);
+    border-color: var(--border-color);
+  }
+
+  &__main {
+    background-color: var(--layout-bg);
+  }
+
+  &__main__content {
+    background-color: var(--layout-main-bg);
+  }
+}
+</style>

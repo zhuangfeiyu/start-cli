@@ -1,0 +1,75 @@
+import { lazy } from 'react'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
+
+<% if (type === 'admin') { -%>
+import Layout from '@/layout/Layout'
+import ProtectedRoute from '@/components/ProtectedRoute'
+
+const Login = lazy(() => import('@/views/login/Login'))
+const TestInfoIndex = lazy(() => import('@/views/test-info/TestInfo'))
+
+export const routesConfig = [
+  {
+    path: '/login',
+    element: <Login />,
+    handle: {
+<% if (needInternational) { -%>
+      title: 'routes.login',
+<% } else { -%>
+      title: '登录页面',
+<% } -%>
+    },
+  },
+  {
+    path: '/',
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <Navigate to="/test-info" replace />,
+      },
+      {
+        path: 'test-info',
+        element: (
+          <ProtectedRoute requireAuth={false}>
+            <TestInfoIndex />
+          </ProtectedRoute>
+        ),
+        handle: {
+<% if (needInternational) { -%>
+          title: 'routes.testInfo',
+<% } else { -%>
+          title: '测试信息',
+<% } -%>
+          icon: 'List',
+          keepAlive: true,
+<% if (needPermission) { -%>
+          permission: 'test-info:view',
+<% } -%>
+        },
+      },
+    ],
+  },
+]
+<% } -%>
+<% if (type === 'screen') { -%>
+const ScreenComponent = lazy(() => import('@/views/screen'))
+
+export const routesConfig = [
+  {
+    path: '/',
+    element: <ScreenComponent />,
+    handle: {
+<% if (needInternational) { -%>
+      title: 'routes.dataScreen',
+<% } else { -%>
+      title: '数据大屏',
+<% } -%>
+      icon: 'Monitor',
+      keepAlive: false,
+    },
+  },
+]
+<% } -%>
+
+export const router = createBrowserRouter(routesConfig)

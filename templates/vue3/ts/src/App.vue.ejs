@@ -1,0 +1,25 @@
+<script setup lang="ts">
+<% if (needInternational) { -%>
+import { elementPlusLocale } from '@/lang'
+<% } else { -%>
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
+<% } -%>
+import { useAuthStore } from '@/stores/auth-store'
+
+defineOptions({
+  name: 'App',
+})
+
+const authStore = useAuthStore()
+
+// token暂时写死
+authStore.setToken('dbc305410e074e6aa0a2cf02f46fda44')
+</script>
+
+<template>
+  <el-config-provider :locale="<% if (needInternational) { -%>elementPlusLocale<% } else { -%>zhCn<% } -%>">
+    <router-view />
+  </el-config-provider>
+</template>
+
+<style scoped lang="scss"></style>

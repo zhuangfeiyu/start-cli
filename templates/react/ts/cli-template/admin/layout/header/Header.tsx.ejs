@@ -1,0 +1,87 @@
+import { useDispatch } from 'react-redux'
+<% if (needTheme) { -%>
+import { useTheme } from '@/hooks/useTheme'
+<% } -%>
+<% if (needInternational) { -%>
+import { useTranslation } from 'react-i18next'
+import { useAppSelector } from '@/stores/hooks'
+import { selectLang, setLang } from '@/stores/global-store'
+import { LANGUAGES } from '@/constants/index'
+<% } -%>
+<% if (needInternational && needTheme) { -%>
+import { useThemeIcon } from '@/hooks/useThemeIcon'
+<% } -%>
+import { Switch, Dropdown } from 'antd'
+<% if (needTheme) { -%>
+import { MoonOutlined, SunOutlined } from '@ant-design/icons'
+<% } -%>
+
+import styles from './Header.module.scss'
+import logo from '@/assets/images/react.svg'
+<% if (needInternational && !needTheme) { -%>
+import languageIcon from '@/assets/images/language.svg'
+<% } -%>
+
+function Header(): JSX.Element {
+<% if (needTheme) { -%>
+  const { theme, toggleTheme } = useTheme()
+<% } -%>
+<% if (needInternational) { -%>
+  const { t } = useTranslation()
+  const dispatch = useDispatch()
+  const lang = useAppSelector(selectLang)
+<% } -%>
+<% if (needInternational && needTheme) { -%>
+  const languageIcon = useThemeIcon('assets/images', 'language.svg')
+<% } -%>
+
+  return (
+    <div className={`${styles.header} h-full`}>
+      <div className="flex items-center gap-2">
+        <img src={logo} alt="logo" />
+        <span className="text-[20px] font-bold">
+<% if (needInternational) { -%>
+          {t('common.systemTitle')}
+<% } else { -%>
+          系统标题
+<% } -%>
+        </span>
+      </div>
+
+<% if (needTheme || needInternational) { -%>
+      <div className="flex items-center gap-4">
+<% if (needTheme) { -%>
+        <Switch
+          checked={theme === 'dark'}
+          onChange={toggleTheme}
+          checkedChildren={<MoonOutlined />}
+          unCheckedChildren={<SunOutlined />}
+        />
+<% } -%>
+<% if (needInternational) { -%>
+        <Dropdown
+          menu={{
+            items: LANGUAGES.map((l) => ({
+              key: l.value,
+              label: l.label,
+              onClick: () => dispatch(setLang(l.value as string)),
+            })),
+          }}
+          placement="bottomRight"
+        >
+          <span className="cursor-pointer flex items-center gap-1">
+<% if (needTheme) { -%>
+            <img src={languageIcon} alt="lang" className="w-4 h-4" />
+<% } else { -%>
+            <img src={languageIcon} alt="language" className="w-4 h-4 cursor-pointer hover:opacity-80" />
+<% } -%>
+          </span>
+        </Dropdown>
+<% } -%>
+      </div>
+<% } -%>
+    </div>
+  )
+}
+
+export default Header

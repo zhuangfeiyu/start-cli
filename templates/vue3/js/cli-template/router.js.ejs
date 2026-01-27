@@ -1,0 +1,151 @@
+import { createRouter, createWebHistory } from 'vue-router'
+import Layout from '@/layout/index.vue'
+import { useAuthStore } from '@/stores/auth-store'
+import { ElMessage } from 'element-plus'
+<% if (needInternational) { -%>
+import { t } from '@/lang';
+import i18n from '@/lang';
+<% } -%>
+
+<% if (type === 'admin') { -%>
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [{
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/login/index.vue'),
+    meta: {
+<% if (needInternational) { -%>
+      title: 'routes.login',
+<% } else { -%>
+      title: '登录',
+<% } -%>
+      requiresAuth: false, // 登录页不需要认证
+    },
+  },{
+    path: '/',
+    component: Layout,
+    redirect: '/test-info',
+    children: [
+      {
+        path: 'test-info',
+        name: 'TestInfoIndex',
+        component: () => import('@/views/test-info/index.vue'),
+        meta: {
+<% if (needInternational) { -%>
+          title: 'routes.testInfo',
+<% } else { -%>
+          title: '测试信息',
+<% } -%>
+          icon: 'List',
+          keepAlive: true,
+          requiresAuth: true,
+        }
+      },
+    ]
+  }],
+})
+<% } -%>
+<% if (type === 'screen') { -%>
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: '/',
+      name: 'ScreenIndex',
+      component: () => import('@/views/screen/index.vue'),
+      meta: {
+<% if (needInternational) { -%>
+        title: 'routes.dataScreen',
+<% } else { -%>
+        title: '数据大屏',
+<% } -%>
+      }
+    },
+  ],
+})
+<% } -%>
+
+// 路由守卫
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+  const isLoggedIn = authStore.isLoggedIn
+
+  // 设置页面标题
+  if (to.meta.title) {
+<% if (needInternational) { -%>
+    const title = typeof to.meta.title === 'string' && to.meta.title.startsWith('routes.') ? t(to.meta.title) : to.meta.title
+    document.title = `${title} - ${t('common.systemTitle')}`
+<% } else { -%>
+    document.title = `${to.meta.title} - 系统标题`
+<% } -%>
+  }
+
+  // 检查是否需要登录
+  const requiresAuth = to.meta.requiresAuth !== false // 默认为 true
+
+  if (requiresAuth && !isLoggedIn) {
+    // 需要登录但未登录，跳转到登录页
+<% if (needInternational) { -%>
+    ElMessage.warning(t('common.pleaseLogin'))
+<% } else { -%>
+    ElMessage.warning('请先登录')
+<% } -%>
+    next({
+      path: '/login',
+      query: { redirect: to.fullPath }, // 保存要访问的路径，登录后可以跳转回来
+    })
+    return
+  }
+
+  // 如果已登录，访问登录页时跳转到首页
+  if (to.path === '/login' && isLoggedIn) {
+    next({ path: '/' })
+    return
+  }
+
+<% if (needPermission) { -%>
+  // 检查角色权限
+  const requiredRole = to.meta.role
+  if (requiredRole && !authStore.hasRole(requiredRole)) {
+<% if (needInternational) { -%>
+    ElMessage.error(t('common.noPermission'))
+<% } else { -%>
+    ElMessage.error('您没有权限访问此页面')
+<% } -%>
+    next({ path: '/' })
+    return
+  }
+
+  // 检查权限
+  const requiredPermission = to.meta.permission
+  if (requiredPermission && !authStore.hasPermission(requiredPermission)) {
+<% if (needInternational) { -%>
+    ElMessage.error(t('common.noPermission'))
+<% } else { -%>
+    ElMessage.error('您没有权限访问此页面')
+<% } -%>
+    next({ path: '/' })
+    return
+  }
+<% } -%>
+
+  next()
+})
+
+<% if (needInternational) { -%>
+// 监听语言变化，更新标题
+watch(
+  () => i18n.global.locale.value,
+  () => {
+    console.log('+++++watch  route ', i18n.global.locale.value);
+    const route = router.currentRoute.value;
+    if (route.meta.title) {
+      const title = t(route.meta.title);
+      document.title = `${title} - ${t('common.systemTitle')}`;
+    }
+  }
+);
+<% } -%>
+
+export default router

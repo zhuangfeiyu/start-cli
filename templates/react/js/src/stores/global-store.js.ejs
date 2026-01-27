@@ -1,0 +1,67 @@
+import { createSlice } from '@reduxjs/toolkit'
+<% if (needInternational) { -%>
+import { LANG_DEFAULT } from '@/constants/index'
+import { setLocale } from '@/lang'
+<% } -%>
+<% if (needTheme) { -%>
+// ThemeType: 'light' | 'dark'
+<% } -%>
+
+const getInitialState = () => ({
+<% if (needInternational) { -%>
+  lang: (localStorage.getItem('lang')) || LANG_DEFAULT,
+<% } -%>
+<% if (needTheme) { -%>
+  theme: (localStorage.getItem('theme')) || 'light',
+<% } -%>
+})
+
+<% if (needTheme) { -%>
+function applyTheme(themeValue) {
+  const root = document.documentElement
+  root.classList.remove('dark')
+  if (themeValue === 'dark') root.classList.add('dark')
+}
+<% } -%>
+
+const globalSlice = createSlice({
+  name: 'global',
+  initialState: getInitialState(),
+  reducers: {
+<% if (needInternational) { -%>
+    setLang: (state, action) => {
+      state.lang = action.payload
+      localStorage.setItem('lang', action.payload)
+      setLocale(action.payload)
+    },
+<% } -%>
+<% if (needTheme) { -%>
+    setTheme: (state, action) => {
+      state.theme = action.payload
+      localStorage.setItem('theme', action.payload)
+      applyTheme(action.payload)
+    },
+<% } -%>
+<% if (!needInternational && !needTheme) { -%>
+    _noop: (state) => state,
+<% } -%>
+  },
+})
+
+<% if (needTheme) { -%>
+applyTheme(getInitialState().theme)
+<% } -%>
+<% if (needInternational) { -%>
+setLocale(getInitialState().lang)
+<% } -%>
+
+<% if (needInternational) { -%>
+export const setLang = globalSlice.actions.setLang
+export const selectLang = (state) => state.global.lang
+<% } -%>
+<% if (needTheme) { -%>
+export const setTheme = globalSlice.actions.setTheme
+export const selectTheme = (state) => state.global.theme
+<% } -%>
+
+export default globalSlice.reducer

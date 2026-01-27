@@ -1,0 +1,49 @@
+# $APP_NAME和$IMAGE⽆需更改，会最终替换为对应环境变量
+apiVersion: v1
+kind: Service
+metadata:
+  name: "$APP_NAME"
+  labels:
+    app: "$APP_NAME"
+spec:
+  # 此处需更改为应⽤真实端⼝
+  ports:
+    - port: 80
+      targetPort: 80
+      # nodePort: 32032
+  selector:
+    app: "$APP_NAME"
+  # 如果应⽤只需在集群内访问，此处使⽤ClusterIP即可，否则可以使⽤NodePort
+  type: NodePort
+---
+# 以下可以满⾜⼤多数应⽤需求，可以⽆需更改
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "$APP_NAME"
+  labels:
+    app: "$APP_NAME"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "$APP_NAME"
+  template:
+    metadata:
+      labels:
+        app: "$APP_NAME"
+    spec:
+      containers:
+        - name: "$APP_NAME"
+          image: "$IMAGE"
+          env:
+            - name: NODE_OPTIONS
+              value: "--max-old-space-size=2048"
+          resources:
+            # 资源需求，根据应⽤按需更改
+            requests:
+              cpu: "100m"
+              memory: "1Gi"
+            limits:
+              cpu: "500m"
+              memory: "2Gi"

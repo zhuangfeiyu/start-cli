@@ -1,0 +1,55 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import {
+  List,
+} from '@element-plus/icons-vue'
+
+// 定义组件名称
+defineOptions({
+  name: 'LayoutMenu'
+})
+
+const route = useRoute()
+
+// 当前激活的菜单
+const activeMenu = computed(() => {
+  return route.path
+})
+</script>
+
+<template>
+  <div class="h-full flex flex-col">
+    <!-- 菜单列表 -->
+    <el-menu :default-active="activeMenu" :unique-opened="true" router class="flex-1 !border-none">
+      <el-menu-item index="/test-info">
+        <el-icon>
+          <List />
+        </el-icon>
+        <template #title>
+<% if (needInternational) { -%>
+          {{ $t('routes.testInfo') }}
+<% } else { -%>
+          测试信息
+<% } -%>
+        </template>
+      </el-menu-item>
+    </el-menu>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.el-menu {
+  background-color: var(--layout-main-bg);
+  .el-menu-item {
+    color: var(--text-secondary);
+    &:hover {
+      color: var(--el-color-primary);
+      // background: var(--el-color-primary-light-9);
+    }
+    &.is-active {
+      color: var(--el-color-primary);
+    }
+  }
+}
+</style>

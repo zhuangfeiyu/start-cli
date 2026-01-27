@@ -1,0 +1,37 @@
+import { useEffect } from 'react'
+import { useMatches } from 'react-router-dom'
+<% if (needInternational) { -%>
+import { useI18n } from '@/lang'
+<% } -%>
+
+/**
+ * 根据当前路由自动设置 document.title
+ * 在需要设置 title 的页面组件中调用即可
+ */
+export function useDocumentTitle() {
+  const matches = useMatches()
+<% if (needInternational) { -%>
+  const t = useI18n()
+<% } -%>
+
+  useEffect(() => {
+    const match = matches[matches.length - 1]
+    const handle = match?.handle
+
+    if (handle?.title) {
+<% if (needInternational) { -%>
+      const pageTitle = handle.title.startsWith('routes.') ? t(handle.title) : handle.title
+      const systemTitle = t('common.systemTitle')
+      document.title = `${pageTitle} - ${systemTitle}`
+<% } else { -%>
+      document.title = handle.title
+<% } -%>
+    } else {
+<% if (needInternational) { -%>
+      document.title = t('common.systemTitle')
+<% } else { -%>
+      document.title = '系统标题'
+<% } -%>
+    }
+  }, [matches<% if (needInternational) { -%>, t<% } -%>])
+}

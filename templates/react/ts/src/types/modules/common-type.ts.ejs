@@ -1,0 +1,11 @@
+export type PrimitiveValue = string | number | boolean | undefined | null
+
+export type OptionItem = {
+  value: string | number
+  label: string
+  [key: string]: PrimitiveValue | PrimitiveValue[] | OptionItem | OptionItem[]
+}
+
+<% if (needTheme) { -%>
+export type ThemeType = 'light' | 'dark'
+<% } -%>

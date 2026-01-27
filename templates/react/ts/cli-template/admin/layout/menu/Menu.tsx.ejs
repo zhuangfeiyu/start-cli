@@ -1,0 +1,141 @@
+import { useMemo } from 'react'
+import { Menu as AntdMenu, type MenuProps } from 'antd'
+import type { SubMenuType } from 'antd/es/menu/interface'
+import { useLocation, useNavigate } from 'react-router-dom'
+<% if (needInternational) { -%>
+import { useTranslation } from 'react-i18next'
+<% } -%>
+
+<% if (needPermission) { -%>
+import { selectPermissions, selectRole } from '@/stores/auth-store'
+<% } -%>
+import { useAppSelector } from '@/stores/hooks'
+import type { AppRouteObject } from '@/router'
+import { routesConfig } from '@/router'
+
+const generateMenuItems = (
+  routes: AppRouteObject[],
+<% if (needPermission) { -%>
+  userRole: string,
+  permissions: string[],
+<% } -%>
+  basePath = '/',
+<% if (needInternational) { -%>
+  t?: (key: string) => string,
+<% } -%>
+): Required<MenuProps>['items'] => {
+  const items: MenuProps['items'] = []
+
+  routes.forEach((route) => {
+    if (route.index || !route.handle) {
+      return
+    }
+
+    const { title, icon<% if (needPermission) { -%>, role, permission<% } -%> } = route.handle
+    const path =
+      basePath === '/' ? `/${route.path ?? ''}` : `${basePath}${basePath.endsWith('/') ? '' : '/'}${route.path ?? ''}`
+    const normalizedPath = path.replace(/\/+/g, '/').replace(/\/$/, '') || '/'
+
+<% if (needPermission) { -%>
+    let hasRoleAccess = true
+    if (role) {
+      hasRoleAccess = Array.isArray(role) ? role.includes(userRole) : userRole === role
+    }
+
+    let hasPermissionAccess = true
+    if (permission) {
+      hasPermissionAccess = Array.isArray(permission)
+        ? permission.some((perm) => permissions.includes(perm))
+        : permissions.includes(permission)
+    }
+
+    if (hasRoleAccess && hasPermissionAccess && title) {
+<% } else { -%>
+    if (title) {
+<% } -%>
+      const label = <% if (needInternational) { -%>t && title.startsWith('routes.') ? t(title) : title<% } else { -%>title<% } %>
+
+      if (route.children && route.children.length > 0) {
+        const children = generateMenuItems(route.children<% if (needPermission) { -%>, userRole, permissions<% } -%>, normalizedPath<% if (needInternational) { -%>, t<% } -%>)
+        if (children && children.length > 0) {
+          const subMenuItem: SubMenuType = {
+            key: normalizedPath,
+            label,
+            icon,
+            children,
+          }
+          items.push(subMenuItem)
+        }
+      } else {
+        const menuItem: NonNullable<MenuProps['items']>[number] = {
+          key: normalizedPath,
+          label,
+          icon,
+        }
+        items.push(menuItem)
+      }
+    }
+  })
+
+  return items
+}
+
+function Menu(): JSX.Element {
+  const navigate = useNavigate()
+  const location = useLocation()
+<% if (needPermission) { -%>
+  const userRole = useAppSelector(selectRole)
+  const permissions = useAppSelector(selectPermissions)
+<% } -%>
+<% if (needInternational) { -%>
+  const { t } = useTranslation()
+<% } -%>
+
+  const menuItems = useMemo(() => {
+    const layoutRoute = routesConfig.find((route) => route.path === '/' && route.children)
+    if (!layoutRoute?.children) {
+      return []
+    }
+    return generateMenuItems(layoutRoute.children<% if (needPermission) { -%>, userRole, permissions<% } -%>, '/'<% if (needInternational) { -%>, t<% } -%>)
+  }, [<% if (needPermission) { -%>userRole, permissions<% } -%><% if (needInternational) { -%><% if (needPermission) { -%>, <% } -%>t<% } -%>])
+
+  const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
+    navigate(key)
+  }
+
+  const selectedKeys = useMemo(() => {
+    const pathname = location.pathname
+    const findSelectedKey = (items: NonNullable<MenuProps['items']>): string | null => {
+      for (const item of items) {
+        if (!item) continue
+        if (item.key === pathname) {
+          return item.key as string
+        }
+        // 检查是否是 SubMenuType（有 children 属性）
+        const subMenu = item as SubMenuType
+        if ('children' in subMenu && subMenu.children) {
+          const childKey = findSelectedKey(subMenu.children)
+          if (childKey) {
+            return childKey
+          }
+        }
+      }
+      return null
+    }
+
+    const selected = findSelectedKey(menuItems ?? [])
+    return selected ? [selected] : []
+  }, [location.pathname, menuItems])
+
+  return (
+    <AntdMenu
+      items={menuItems}
+      theme="light"
+      mode="inline"
+      selectedKeys={selectedKeys}
+      onClick={handleMenuClick}
+    />
+  )
+}
+
+export default Menu

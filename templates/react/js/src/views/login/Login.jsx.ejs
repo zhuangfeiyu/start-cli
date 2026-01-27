@@ -1,0 +1,113 @@
+import { useEffect, useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { Form, Input, Button, message } from 'antd'
+import { UserOutlined, LockOutlined } from '@ant-design/icons'
+<% if (needInternational) { -%>
+import { useTranslation } from 'react-i18next'
+<% } -%>
+
+import { login } from '@/api/auth'
+import { setAuthData, selectIsLoggedIn } from '@/stores/auth-store'
+import { useAppDispatch, useAppSelector } from '@/stores/hooks'
+import { useDocumentTitle } from '@/hooks'
+
+import styles from './Login.module.scss'
+
+function Login() {
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const dispatch = useAppDispatch()
+  const isLoggedIn = useAppSelector(selectIsLoggedIn)
+  const [form] = Form.useForm()
+<% if (needInternational) { -%>
+  const { t } = useTranslation()
+<% } -%>
+  useDocumentTitle()
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      const from = location.state?.from?.pathname || '/'
+      navigate(from, { replace: true })
+    }
+  }, [isLoggedIn, navigate, location.state])
+
+  const handleLogin = async (values) => {
+    try {
+      setLoading(true)
+      const { username, password } = values
+      const response = await login({ username, password })
+
+      if (response.code === 200 && response.data) {
+        dispatch(setAuthData(response.data))
+        message.success(<% if (needInternational) { -%>t('login.loginSuccess')<% } else { -%>'登录成功'<% } -%>)
+        const from = location.state?.from?.pathname || '/'
+        navigate(from, { replace: true })
+      } else {
+        message.error(response.message || <% if (needInternational) { -%>t('login.loginFailed')<% } else { -%>'登录失败，请检查用户名和密码'<% } -%>)
+      }
+    } catch (error) {
+      console.error('登录错误:', error)
+      message.error(<% if (needInternational) { -%>t('login.loginFailed')<% } else { -%>'登录失败，请稍后重试'<% } -%>)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className={styles.login}>
+      <div className={styles['login__box']}>
+        <div className={styles['login__header']}>
+          <h1 className={styles['login__title']}><% if (needInternational) { -%>{t('login.welcome')}<% } else { -%>欢迎登录<% } -%></h1>
+          <p className={styles['login__subtitle']}><% if (needInternational) { -%>{t('login.pleaseInputAccountAndPassword')}<% } else { -%>请输入您的账号和密码<% } -%></p>
+        </div>
+
+        <Form
+          form={form}
+          name="login"
+          onFinish={handleLogin}
+          autoComplete="off"
+          size="large"
+          className={styles['login__form']}
+        >
+          <Form.Item
+            name="username"
+            rules={[
+              { required: true, message: <% if (needInternational) { -%>t('login.pleaseInputUsername')<% } else { -%>'请输入用户名'<% } -%> },
+              { min: 2, message: <% if (needInternational) { -%>t('login.usernameMinMessage')<% } else { -%>'用户名至少2个字符'<% } -%> },
+            ]}
+          >
+            <Input prefix={<UserOutlined />} placeholder={<% if (needInternational) { -%>t('login.username')<% } else { -%>"用户名"<% } -%>} autoComplete="username" />
+          </Form.Item>
+
+          <Form.Item
+            name="password"
+            rules={[
+              { required: true, message: <% if (needInternational) { -%>t('login.pleaseInputPassword')<% } else { -%>'请输入密码'<% } -%> },
+              { min: 6, message: <% if (needInternational) { -%>t('login.passwordMinMessage')<% } else { -%>'密码至少6个字符'<% } -%> },
+            ]}
+          >
+            <Input.Password prefix={<LockOutlined />} placeholder={<% if (needInternational) { -%>t('login.password')<% } else { -%>"密码"<% } -%>} autoComplete="current-password" />
+          </Form.Item>
+
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={loading} block className={styles['login__button']}>
+              {loading ? (<% if (needInternational) { -%>t('login.loggingIn')<% } else { -%>'登录中...'<% } -%>) : (<% if (needInternational) { -%>t('login.login')<% } else { -%>'登录'<% } -%>)}
+            </Button>
+          </Form.Item>
+        </Form>
+
+        <div className={styles['login__tips']}>
+          <p className={styles['login__tips_title']}>测试账号：</p>
+          <ul className={styles['login__tips_list']}>
+            <li>管理员：admin / 任意密码</li>
+            <li>编辑：editor / 任意密码</li>
+            <li>查看者：viewer / 任意密码</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default Login

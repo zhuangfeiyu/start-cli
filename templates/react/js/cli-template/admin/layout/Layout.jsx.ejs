@@ -1,0 +1,108 @@
+import { useMemo } from 'react'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Layout as AntdLayout, Breadcrumb as AntdBreadcrumb } from 'antd'
+
+import styles from './Layout.module.scss'
+import Header from './header/Header'
+import Menu from './menu/Menu'
+<% if (needInternational) { -%>
+import { useI18n } from '@/lang'
+<% } -%>
+import { routesConfig } from '@/router'
+import { useDocumentTitle } from '@/hooks'
+
+const { Header: AntdHeader, Content: AntdContent, Sider: AntdSider } = AntdLayout
+
+/**
+ * 根据路径查找路由配置，生成面包屑路径
+ */
+function findBreadcrumbPaths(
+  routes,
+  pathname,
+  basePath = '/',
+  breadcrumbs = [],
+) {
+  for (const route of routes) {
+    if (route.index || !route.handle?.title) continue
+
+    const normalizedPath = [basePath, route.path].filter(Boolean).join('/').replace(/\/+/g, '/').replace(/\/$/, '') || '/'
+
+    // 当前路径匹配
+    if (normalizedPath === pathname) {
+      return [...breadcrumbs, { path: normalizedPath, title: route.handle.title }]
+    }
+
+    // 子路径匹配
+    if (pathname.startsWith(normalizedPath + '/') && route.children) {
+      const result = findBreadcrumbPaths(
+        route.children,
+        pathname,
+        normalizedPath,
+        [...breadcrumbs, { path: normalizedPath, title: route.handle.title }],
+      )
+      if (result) return result
+    }
+  }
+  return null
+}
+
+function Layout() {
+  const location = useLocation()
+  const navigate = useNavigate()
+<% if (needInternational) { -%>
+  const t = useI18n()
+<% } -%>
+  useDocumentTitle()
+
+  const breadcrumbPaths = useMemo(() => {
+    const layoutRoute = routesConfig.find((route) => route.path === '/' && route.children)
+    if (!layoutRoute?.children) {
+      return []
+    }
+
+    const paths = findBreadcrumbPaths(layoutRoute.children, location.pathname)
+    return paths || []
+  }, [location.pathname])
+
+  return (
+    <AntdLayout className={styles.layout}>
+      <AntdHeader className={styles['layout__header']}>
+        <Header />
+      </AntdHeader>
+      <AntdLayout>
+        <AntdSider theme="light" className={styles['layout__sider']}>
+          <Menu />
+        </AntdSider>
+        <AntdLayout className={styles['layout__content_wrap']}>
+          <AntdBreadcrumb className={styles['layout__breadcrumb']}>
+            {breadcrumbPaths.map((item, index) => {
+<% if (needInternational) { -%>
+              const title = item.title.startsWith('routes.') ? t(item.title) : item.title
+<% } else { -%>
+              const title = item.title
+<% } -%>
+              const isLast = index === breadcrumbPaths.length - 1
+
+              return (
+                <AntdBreadcrumb.Item key={item.path}>
+                  {isLast ? (
+                    title
+                  ) : (
+                    <a onClick={() => navigate(item.path)} style={{ cursor: 'pointer' }}>
+                      {title}
+                    </a>
+                  )}
+                </AntdBreadcrumb.Item>
+              )
+            })}
+          </AntdBreadcrumb>
+          <AntdContent className={styles['layout__content']}>
+            <Outlet />
+          </AntdContent>
+        </AntdLayout>
+      </AntdLayout>
+    </AntdLayout>
+  )
+}
+
+export default Layout

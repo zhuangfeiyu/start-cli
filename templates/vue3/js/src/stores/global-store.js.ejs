@@ -1,0 +1,55 @@
+import { defineStore } from 'pinia'
+import { LANG_DEFAULT } from '@/constants/index'
+<% if (needInternational) { -%>
+import { setLocale } from '@/lang'
+<% } -%>
+
+export const useGlobalStore = defineStore('global', () => {
+<% if (needInternational) { -%>
+  // 从 localStorage 读取或使用默认值
+  const lang = ref(LANG_DEFAULT)
+
+  const setLang = (newLang) => {
+    lang.value = newLang
+    localStorage.setItem('lang', newLang)
+    // 同步设置所有依赖库的语言
+    setLocale(newLang)
+  }
+
+  // 初始化时设置语言
+  setLocale(lang.value)
+<% } -%>
+
+<% if (needTheme) { -%>
+  const theme = ref((localStorage.getItem('theme') || 'light'))
+  // 设置主题
+  const setTheme = (newTheme) => {
+    theme.value = newTheme
+    localStorage.setItem('theme', newTheme)
+    applyTheme(newTheme)
+  }
+
+  // 应用主题到 DOM
+  const applyTheme = (themeValue) => {
+    const root = document.documentElement
+    // 移除深色主题类
+    root.classList.remove('dark')
+    // 添加新主题类（默认 light 不需要类名）
+    if (themeValue === 'dark') {
+      root.classList.add('dark')
+    }
+  }
+  applyTheme(theme.value)
+<% } -%>
+
+  return {
+<% if (needInternational) { -%>
+    lang,
+    setLang,
+<% } -%>
+<% if (needTheme) { -%>
+    theme,
+    setTheme,
+<% } -%>
+  }
+})

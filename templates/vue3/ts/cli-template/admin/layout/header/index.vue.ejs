@@ -1,0 +1,190 @@
+<script setup lang="ts">
+import { ArrowDown<% if (needTheme) { %>, Sunny, Moon<% } %> } from '@element-plus/icons-vue'
+// import { useAuthStore } from '@/stores/auth-store'
+<% if (needInternational || needTheme) { -%>
+import { useGlobalStore } from '@/stores/global-store'
+<% } -%>
+<% if (needInternational) { -%>
+import { LANGUAGES } from '@/constants/index'
+<% } -%>
+<% if (needInternational && needTheme) { -%>
+import { useThemeIcon } from '@/composables/useThemeIcon'
+<% } -%>
+defineOptions({
+  name: 'LayoutHeader'
+})
+
+// const authStore = useAuthStore()
+// const userInfo = computed(() => authStore.getUserInfo())
+
+<% if (needInternational || needTheme) { -%>
+const globalStore = useGlobalStore()
+<% } -%>
+
+<% if (needInternational) { -%>
+// 处理语言切换
+const handleLanguageChange = (locale: string) => {
+  globalStore.setLang(locale)
+}
+<% } -%>
+
+<% if (needTheme) { -%>
+// 主题开关的 computed（将 theme 字符串转换为 boolean）
+const isDarkMode = computed({
+  get: () => globalStore.theme === 'dark',
+  set: (value: boolean) => {
+    globalStore.setTheme(value ? 'dark' : 'light')
+  }
+})
+<% } -%>
+
+<% if (needInternational && needTheme) { -%>
+// 根据主题获取语言图标
+const { icon: languageIcon } = useThemeIcon('assets/images', 'language.svg')
+<% } -%>
+
+type UserItem = {
+  id: number
+  name: string
+  role: string
+}
+
+const userList = ref<UserItem[]>([
+  {
+    id: 1,
+    name: '张三',
+    role: '管理员'
+  },
+  {
+    id: 2,
+    name: '李四',
+    role: '普通用户'
+  },
+  {
+    id: 3,
+    name: '王五',
+    role: '普通用户'
+  }
+])
+
+const currentUser = ref<UserItem>(
+  userList.value[0] || {
+    id: -1,
+    name: '',
+    role: '',
+  }
+);
+
+const handleCommand = (command: string) => {
+  if (!command.startsWith('switch-')) return
+  const userId = Number(command.replace('switch-', ''))
+  const target = userList.value.find((user) => user.id === userId)
+  if (target) {
+    currentUser.value = target
+  }
+}
+</script>
+
+<template>
+  <div class="h-full w-full flex justify-between items-center">
+    <!-- 左侧：系统标题 -->
+    <div class="flex items-center">
+      <span class="text-lg font-bold">
+<% if (needInternational) { -%>
+        {{ $t('common.systemTitle') }}
+<% } else { -%>
+        系统标题
+<% } -%>
+      </span>
+    </div>
+    
+    <!-- 右侧：功能区域 -->
+    <div class="flex items-center gap-4">
+<% if (needTheme) { -%>
+      <!-- 主题切换 -->
+      <el-switch
+        v-model="isDarkMode"
+        :active-action-icon="Moon"
+        :inactive-action-icon="Sunny" 
+      />
+<% } -%>
+<% if (needInternational) { -%>
+      <!-- 国际化 -->
+      <el-popover placement="bottom-end" :width="120">
+        <template #default>
+          <div class="language-list">
+            <div
+              v-for="language in LANGUAGES"
+              :key="language.value"
+              class="language_list__item"
+              :class="{ active: globalStore.lang === language.value }"
+              @click="handleLanguageChange(language.value)"
+            >
+              {{ language.label }}
+            </div>
+          </div>
+        </template>
+        <template #reference>
+<% if (needTheme) { -%>
+          <img :src="languageIcon" alt="language" class="w-4 h-4 cursor-pointer hover:opacity-80" />
+<% } else { -%>
+          <img src="@/assets/images/language.svg" alt="language" class="w-4 h-4 cursor-pointer hover:opacity-80" />
+<% } -%>
+        </template>
+      </el-popover>
+<% } -%>
+      <!-- 用户下拉菜单 -->
+      <el-dropdown 
+        trigger="click" 
+        placement="bottom-end"
+        @command="handleCommand"
+      >
+        <div class="flex items-center gap-2 cursor-pointer user_info">
+          <span class="text-sm font-medium">{{ currentUser.name }}</span>
+          <el-icon class="text-xs">
+            <ArrowDown />
+          </el-icon>
+        </div>
+        
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item 
+              v-for="user in userList" 
+              :key="user.id"
+              :command="`switch-${user.id}`"
+              :disabled="user.id === currentUser.id"
+            >
+              {{ user.name }} ({{ user.role }})
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.user_info {
+  color: var(--text-secondary);
+}
+
+<% if (needInternational) { -%>
+.language_list {
+  &__item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    
+    &:hover {
+      background-color: var(--el-fill-color-light);
+    }
+    
+    &.active {
+      color: var(--el-color-primary);
+      background-color: var(--el-color-primary-light-9);
+    }
+  }
+}
+<% } -%>
+</style>

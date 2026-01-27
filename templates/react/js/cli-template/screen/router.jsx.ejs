@@ -1,0 +1,22 @@
+import { createBrowserRouter } from 'react-router-dom'
+import { lazy } from 'react'
+
+const ScreenComponent = lazy(() => import('@/views/screen'))
+
+export const routesConfig = [
+  {
+    path: '/',
+    element: <ScreenComponent />,
+    handle: {
+<% if (needInternational) { -%>
+      title: 'routes.dataScreen',
+<% } else { -%>
+      title: '数据大屏',
+<% } -%>
+      icon: 'Monitor',
+      keepAlive: false,
+    },
+  },
+]
+
+export const router = createBrowserRouter(routesConfig)

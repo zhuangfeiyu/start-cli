@@ -1,0 +1,143 @@
+import { fileURLToPath, URL } from 'node:url'
+
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import vueDevTools from 'vite-plugin-vue-devtools'
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+<% if (needObfuscator) { -%>
+import obfuscatorPlugin from 'vite-plugin-javascript-obfuscator'
+<% } -%>
+
+// https://vite.dev/config/
+export default defineConfig(({ command, mode }) => {
+  console.log(command, mode)
+
+  return {
+    plugins: [
+      vue(),
+      vueDevTools(),
+      AutoImport({
+        imports: [
+          'vue',
+          'vue-router',
+          'pinia',
+          {
+            '@/constants': ['RESPONSE_CODE']
+          }
+        ],
+        resolvers: [ElementPlusResolver({
+          importStyle: 'sass'
+        })],
+        dts: "src/types/auto-import.d.ts", 
+        vueTemplate: true,
+        eslintrc: {
+          enabled: true,
+          filepath: './.eslintrc-auto-import.json',
+          globalsPropValue: true,
+        },
+      }),
+      Components({
+        resolvers: [ElementPlusResolver({
+          importStyle: 'sass'
+        })],
+        dts: "src/types/global-components.d.ts",
+        extensions: ['vue', 'js', 'ts'],
+        deep: true,
+      }),
+<% if (needObfuscator) { -%>
+      obfuscatorPlugin({
+        apply: 'build', // 只在构建时应用
+        // 排除 sourcemap 相关文件，避免 sourcemap 错误
+        exclude: [/node_modules/],
+        options: {
+          compact: true,
+          controlFlowFlattening: true,
+          controlFlowFlatteningThreshold: 1,
+          deadCodeInjection: false,
+          debugProtection: false,
+          debugProtectionInterval: 0,
+          disableConsoleOutput: false,
+          identifierNamesGenerator: "hexadecimal",
+          log: false,
+          numbersToExpressions: false,
+          renameGlobals: false,
+          selfDefending: true,
+          simplify: true,
+          splitStrings: false,
+          stringArrayCallsTransform: false,
+          stringArrayCallsTransformThreshold: 0.5,
+          stringArrayEncoding: [],
+          stringArrayIndexShift: true,
+          stringArrayRotate: true,
+          stringArrayShuffle: true,
+          stringArrayWrappersCount: 1,
+          stringArrayWrappersChainedCalls: true,
+          stringArrayWrappersParametersMaxCount: 2,
+          stringArrayWrappersType: "variable",
+          stringArrayThreshold: 0.75,
+          unicodeEscapeSequence: false,
+        },
+      }),
+<% } -%>
+    ],
+    css: {
+      postcss: './postcss.config.js',
+      preprocessorOptions: {
+        scss: {
+          additionalData: `@use "@/styles/element/index.scss" as *; @use "@/styles/root-color.scss" as *;`, // 全局注入样式变量
+        },
+      },
+    },
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url))
+      },
+    },
+    server: {
+      port: 4984,
+      open: true,
+      cors: true,
+      proxy: {
+        '/api': {
+          target: 'http://127.0.0.1:4523/m1/6722676-6433606-default/',
+          changeOrigin: true
+        },
+        '/mockapi': {
+          target: 'http://127.0.0.1:4523/m1/6722676-6433606-default/',
+          changeOrigin: true
+        }
+      },
+    },
+    build: {
+      target: 'es2015',
+      outDir: 'dist',
+      assetsDir: 'assets',
+<% if (needObfuscator) { -%>
+      sourcemap: false, // 禁用 sourcemap 以避免混淆插件导致的 sourcemap 错误
+<% } -%>
+      // 确保类型保持为 'esbuild' 这个字面量
+      minify: 'esbuild' as const,
+      esbuildOptions: {
+        drop: ['debugger'],
+      },
+      rollupOptions: {
+        output: {
+          chunkFileNames: 'js/[name]-[hash].js',
+          entryFileNames: 'js/[name]-[hash].js',
+          assetFileNames: '[ext]/[name]-[hash].[ext]',
+          manualChunks: {
+            'vue-vendor': ['vue', 'vue-router', 'pinia'],
+            'element-plus': ['element-plus', '@element-plus/icons-vue'],
+            utils: ['axios', 'dayjs', '@vueuse/core'],
+          },
+        },
+      },
+    },
+    // 启用 gzip 压缩
+    reportCompressedSize: true,
+    // 设置块大小警告限制
+    chunkSizeWarningLimit: 1000,
+  }
+})

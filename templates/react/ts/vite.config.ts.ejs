@@ -1,0 +1,132 @@
+import { fileURLToPath, URL } from 'node:url'
+
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import AutoImport from 'unplugin-auto-import/vite'
+import vitePluginImp from 'vite-plugin-imp'
+<% if (needObfuscator) { -%>
+import obfuscatorPlugin from 'vite-plugin-javascript-obfuscator'
+<% } -%>
+
+export default defineConfig(({ command, mode }) => ({
+  plugins: [
+    react(),
+    AutoImport({
+      imports: [
+        'react',
+        'react-router-dom',
+        {
+          'react-redux': ['useDispatch', 'useSelector'],
+        },
+        {
+          '@/constants': ['RESPONSE_CODE'],
+        },
+      ],
+      dts: false,
+      eslintrc: {
+        enabled: true,
+        filepath: './.eslintrc-auto-import.json',
+        globalsPropValue: true,
+      },
+    }),
+    vitePluginImp({
+      libList: [
+        {
+          libName: 'antd',
+          style: (name: string) => `antd/es/${name}/style`,
+        },
+      ],
+    }),
+<% if (needObfuscator) { -%>
+    obfuscatorPlugin({
+      apply: 'build',
+      exclude: [/node_modules/],
+      options: {
+        compact: true,
+        controlFlowFlattening: true,
+        controlFlowFlatteningThreshold: 1,
+        deadCodeInjection: false,
+        debugProtection: false,
+        debugProtectionInterval: 0,
+        disableConsoleOutput: false,
+        identifierNamesGenerator: 'hexadecimal',
+        log: false,
+        numbersToExpressions: false,
+        renameGlobals: false,
+        selfDefending: true,
+        simplify: true,
+        splitStrings: false,
+        stringArrayCallsTransform: false,
+        stringArrayCallsTransformThreshold: 0.5,
+        stringArrayEncoding: [],
+        stringArrayIndexShift: true,
+        stringArrayRotate: true,
+        stringArrayShuffle: true,
+        stringArrayWrappersCount: 1,
+        stringArrayWrappersChainedCalls: true,
+        stringArrayWrappersParametersMaxCount: 2,
+        stringArrayWrappersType: 'variable',
+        stringArrayThreshold: 0.75,
+        unicodeEscapeSequence: false,
+      },
+    }),
+<% } -%>
+  ],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
+  css: {
+    preprocessorOptions: {
+      less: {
+        javascriptEnabled: true,
+        modifyVars: {},
+      },
+    },
+  },
+  server: {
+    port: 4985,
+    open: true,
+    cors: true,
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:4523/m1/6722676-6433606-default/',
+        changeOrigin: true,
+      },
+      '/mockapi': {
+        target: 'http://127.0.0.1:4523/m1/6722676-6433606-default/',
+        changeOrigin: true,
+      },
+    },
+  },
+  build: {
+    target: 'es2015',
+    outDir: 'dist',
+    assetsDir: 'assets',
+<% if (needObfuscator) { -%>
+    sourcemap: false,
+<% } -%>
+    minify: 'esbuild' as const,
+    esbuildOptions: {
+      drop: ['debugger'],
+    },
+    rollupOptions: {
+      output: {
+        chunkFileNames: 'js/[name]-[hash].js',
+        entryFileNames: 'js/[name]-[hash].js',
+        assetFileNames: '[ext]/[name]-[hash].[ext]',
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom', 'react-redux'],
+          antd: ['antd', '@ant-design/icons'],
+          utils: ['axios'],
+        },
+      },
+    },
+  },
+  reportCompressedSize: true,
+  chunkSizeWarningLimit: 1000,
+  optimizeDeps: {
+    include: ['antd'],
+  },
+}))

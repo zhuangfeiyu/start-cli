@@ -1,0 +1,18 @@
+<script setup lang="ts">
+
+defineOptions({
+    name: 'TestInfoIndex',
+})
+</script>
+
+<template>
+    <div>
+<% if (needInternational) { -%>
+      {{ $t('pages.testInfo') }}
+<% } else { -%>
+      测试信息
+<% } -%>
+    </div>
+</template>
+
+<style scoped lang="scss"></style>

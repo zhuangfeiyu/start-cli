@@ -1,0 +1,8 @@
+<% if (needInternational) { -%>
+export const LangEnum = {
+  en: 'en',
+  zhCN: 'zh-CN',
+} as const
+
+export type LangEnumType = (typeof LangEnum)[keyof typeof LangEnum]
+<% } -%>

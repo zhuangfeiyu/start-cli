@@ -1,0 +1,19 @@
+<% if (needInternational) { -%>
+import { LangEnum } from './enums'
+<% } -%>
+
+export const AXIOS_TIMEOUT = 15000
+
+export const RESPONSE_CODE = {
+  SUCCESS: 200,
+  ERROR: 500,
+}
+
+<% if (needInternational) { -%>
+export const LANG_DEFAULT = (localStorage.getItem('lang')) || LangEnum.zhCN
+
+export const LANGUAGES = [
+  { label: '简体中文', value: LangEnum.zhCN },
+  { label: 'English', value: LangEnum.en },
+]
+<% } -%>

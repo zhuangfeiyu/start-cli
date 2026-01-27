@@ -1,0 +1,207 @@
+<template>
+  <div class="login flex items-center justify-center min-h-screen p-5">
+    <div class="login__card w-full max-w-[400px] rounded-xl shadow-2xl p-10 animate-[slideUp_0.3s_ease-out] md:p-6">
+      <div class="text-center mb-8">
+        <h1 class="text-[28px] md:text-2xl font-semibold m-0 mb-2 login__title">
+<% if (needInternational) { -%>
+          {{ $t('login.welcome') }}
+<% } else { -%>
+          欢迎登录
+<% } -%>
+        </h1>
+        <p class="text-sm m-0 login__subtitle">
+<% if (needInternational) { -%>
+          {{ $t('login.pleaseInputAccountAndPassword') }}
+<% } else { -%>
+          请输入您的账号和密码
+<% } -%>
+        </p>
+      </div>
+
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        class="mt-8"
+        size="large"
+        @submit.prevent="handleLogin"
+      >
+        <el-form-item prop="username">
+          <el-input
+            v-model="form.username"
+<% if (needInternational) { -%>
+            :placeholder="$t('login.username')"
+<% } else { -%>
+            placeholder="用户名"
+<% } -%>
+            :prefix-icon="User"
+            autocomplete="username"
+          />
+        </el-form-item>
+
+        <el-form-item prop="password">
+          <el-input
+            v-model="form.password"
+            type="password"
+<% if (needInternational) { -%>
+            :placeholder="$t('login.password')"
+<% } else { -%>
+            placeholder="密码"
+<% } -%>
+            :prefix-icon="Lock"
+            autocomplete="current-password"
+            show-password
+            @keyup.enter="handleLogin"
+          />
+        </el-form-item>
+
+        <el-form-item>
+          <el-button
+            type="primary"
+            :loading="loading"
+            class="w-full mt-2 h-11 text-base font-medium"
+            @click="handleLogin"
+          >
+<% if (needInternational) { -%>
+            {{ loading ? $t('login.loggingIn') : $t('login.login') }}
+<% } else { -%>
+            {{ loading ? "登录中..." : "登录" }}
+<% } -%>
+          </el-button>
+        </el-form-item>
+      </el-form>
+
+      <div class="login__info mt-6 pt-6 border-t text-xs">
+        <p class="m-0 mb-2 font-medium login__info__title">测试账号：</p>
+        <ul class="m-0 pl-5 login__info__list">
+          <li class="mb-1 leading-relaxed">管理员：admin / 任意密码</li>
+          <li class="mb-1 leading-relaxed">编辑：editor / 任意密码</li>
+          <li class="mb-1 leading-relaxed">查看者：viewer / 任意密码</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { User, Lock } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
+import { useAuthStore } from '@/stores/auth-store'
+import { login } from '@/api/auth'
+<% if (needInternational) { -%>
+import { t } from '@/lang'
+<% } -%>
+
+defineOptions({
+  name: 'Login',
+})
+
+const router = useRouter()
+const route = useRoute()
+const authStore = useAuthStore()
+
+const formRef = ref<FormInstance>()
+const loading = ref(false)
+const form = ref({
+  username: '',
+  password: '',
+})
+
+const rules: FormRules = {
+  username: [
+    { required: true, message: <% if (needInternational) { -%>t('login.pleaseInputUsername')<% } else { -%>'请输入用户名'<% } -%>, trigger: 'blur' },
+    { min: 2, message: <% if (needInternational) { -%>t('login.usernameMinMessage')<% } else { -%>'用户名至少2个字符'<% } -%>, trigger: 'blur' },
+  ],
+  password: [
+    { required: true, message: <% if (needInternational) { -%>t('login.pleaseInputPassword')<% } else { -%>'请输入密码'<% } -%>, trigger: 'blur' },
+    { min: 6, message: <% if (needInternational) { -%>t('login.passwordMinMessage')<% } else { -%>'密码至少6个字符'<% } -%>, trigger: 'blur' },
+  ],
+}
+
+// 如果已登录，自动跳转
+onMounted(() => {
+  if (authStore.isLoggedIn) {
+    const redirect = (route.query.redirect as string) || '/'
+    router.replace(redirect)
+  }
+})
+
+// 处理登录
+const handleLogin = async () => {
+  if (!formRef.value) return
+
+  await formRef.value.validate(async (valid) => {
+    if (!valid) return
+
+    try {
+      loading.value = true
+      const response = await login({
+        username: form.value.username,
+        password: form.value.password,
+      })
+
+      if (response.code === 200 && response.data) {
+        // 保存登录信息到 store
+        authStore.setAuthData(response.data)
+        ElMessage.success(<% if (needInternational) { -%>t('login.loginSuccess')<% } else { -%>'登录成功'<% } -%>)
+
+        // 跳转到之前要访问的页面或首页
+        const redirect = (route.query.redirect as string) || '/'
+        router.replace(redirect)
+      } else {
+        ElMessage.error(response.message || <% if (needInternational) { -%>t('login.loginFailed')<% } else { -%>'登录失败，请检查用户名和密码'<% } -%>)
+      }
+    } catch (error) {
+      console.error('登录错误:', error)
+      ElMessage.error(<% if (needInternational) { -%>t('login.loginFailed')<% } else { -%>'登录失败，请稍后重试'<% } -%>)
+    } finally {
+      loading.value = false
+    }
+  })
+}
+</script>
+
+<style scoped>
+.login {
+  background: linear-gradient(to bottom right, var(--login-gradient-from), var(--login-gradient-to));
+
+  &__card {
+    background-color: var(--layout-main-bg);
+  }
+
+  &__title {
+    color: var(--text-primary);
+  }
+
+  &__subtitle {
+    color: var(--text-secondary);
+  }
+
+  &__info {
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+    
+    &__title {
+      color: var(--text-primary);
+    }
+    
+    &__list {
+      color: var(--text-secondary);
+    }
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+</style>

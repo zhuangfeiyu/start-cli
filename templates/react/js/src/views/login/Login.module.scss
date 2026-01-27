@@ -1,0 +1,98 @@
+.login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--login-gradient-from) 0%, var(--login-gradient-to) 100%);
+  padding: 20px;
+
+  &__box {
+    width: 100%;
+    max-width: 400px;
+    background: var(--layout-main-bg);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    animation: login-slide-up 0.3s ease-out;
+
+    @media (max-width: 480px) {
+      padding: 24px;
+    }
+  }
+
+  &__header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  &__title {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+
+    @media (max-width: 480px) {
+      font-size: 24px;
+    }
+  }
+
+  &__subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  &__form {
+    margin-top: 32px;
+  }
+
+  &__button {
+    margin-top: 8px;
+  }
+
+  &__tips {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
+    font-size: 12px;
+    color: var(--text-secondary);
+
+    &_title {
+      margin: 0 0 8px 0;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    &_list {
+      margin: 0;
+      padding-left: 20px;
+
+      li {
+        margin-bottom: 4px;
+        line-height: 1.6;
+      }
+    }
+  }
+}
+
+@keyframes login-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+:global(.ant-input-affix-wrapper) {
+  border-radius: 8px;
+}
+
+:global(.ant-btn-primary) {
+  border-radius: 8px;
+  height: 44px;
+  font-size: 16px;
+  font-weight: 500;
+}

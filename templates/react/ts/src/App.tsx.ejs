@@ -1,0 +1,32 @@
+import { RouterProvider } from 'react-router-dom'
+<% if (needInternational) { -%>
+import { useSelector } from 'react-redux'
+import { ConfigProvider } from 'antd'
+import type { RootState } from './stores'
+import { selectLang } from './stores/global-store'
+import { getAntdLocale } from '@/lang'
+<% } else { -%>
+import { ConfigProvider } from 'antd'
+import zhCN from 'antd/locale/zh_CN'
+<% } -%>
+import { router } from './router'
+import './App.scss'
+
+function App(): JSX.Element {
+<% if (needInternational) { -%>
+  const lang = useSelector((state: RootState) => selectLang(state))
+  return (
+    <ConfigProvider locale={getAntdLocale(lang)}>
+      <RouterProvider router={router} />
+    </ConfigProvider>
+  )
+<% } else { -%>
+  return (
+    <ConfigProvider locale={zhCN}>
+      <RouterProvider router={router} />
+    </ConfigProvider>
+  )
+<% } -%>
+}
+
+export default App
