@@ -14,7 +14,7 @@ const program = new Command();
 program
   .name('create-fy-cli')
   .description('😸😸自定义前端项目脚手架😸😸')
-  .version('1.0.0','-v, --version', '显示版本号')
+  .version('1.0.1','-v, --version', '显示版本号')
   .helpOption('-h, --help', '显示帮助信息');
 
 program
