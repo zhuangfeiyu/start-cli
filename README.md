@@ -1,4 +1,4 @@
-# @fy/create-cli
+# @hrbbeer/create-cli
 
 一个简洁高效的前端项目脚手架工具，内置了一些功能模板，帮助开发者快速创建 Vue3 和 React 的初始项目，将精力主要放在之后的业务开发上。
 
@@ -16,7 +16,7 @@
 ## 📦 安装
 
 ```bash
-npm install -g @fy/create-cli
+npm install -g @hrbbeer/create-cli
 ```
 
 或使用本地链接（开发调试时）：
