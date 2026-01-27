@@ -1,4 +1,4 @@
-# @fy/create-cli
+# @hrbbeer/create-cli
 
 A concise and efficient frontend project scaffolding tool with built-in feature templates, helping developers quickly create initial Vue3 and React projects, allowing them to focus on business development.
 
@@ -16,7 +16,7 @@ A concise and efficient frontend project scaffolding tool with built-in feature 
 ## 📦 Installation
 
 ```bash
-npm install -g @fy/create-cli
+npm install -g @hrbbeer/create-cli
 ```
 
 Or use local link (for development and debugging):

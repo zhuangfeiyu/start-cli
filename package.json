@@ -1,5 +1,5 @@
 {
-  "name": "@fy/create-cli",
+  "name": "@hrbbeer/create-cli",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
