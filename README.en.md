@@ -2,6 +2,10 @@
 
 A concise and efficient frontend project scaffolding tool with built-in feature templates, helping developers quickly create initial Vue3 and React projects, allowing them to focus on business development.
 
+**Repository**: [https://github.com/zhuangfeiyu/start-cli](https://github.com/zhuangfeiyu/start-cli)
+
+Welcome to open issues or contribute to the project.
+
 ## ✨ Features
 
 - 🎯 **Multi-framework Support**: Vue3, React
