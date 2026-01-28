@@ -2,6 +2,10 @@
 
 一个简洁高效的前端项目脚手架工具，内置了一些功能模板，帮助开发者快速创建 Vue3 和 React 的初始项目，将精力主要放在之后的业务开发上。
 
+**Git 仓库**：[https://github.com/zhuangfeiyu/start-cli](https://github.com/zhuangfeiyu/start-cli)
+
+欢迎大家提 issue 或参与建设。
+
 ## ✨ 特性
 
 - 🎯 **多框架支持**：Vue3、React
